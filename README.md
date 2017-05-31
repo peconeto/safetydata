@@ -1,0 +1,3 @@
+# safetydata
+
+This is a R library in development to help aviation safety data analysts perform common tasks.
