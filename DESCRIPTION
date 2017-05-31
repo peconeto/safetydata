@@ -1,0 +1,10 @@
+Package: safetydata
+Type: Package
+Title: Aviation Safety Analytical Tools
+Version: 0.1.0
+Date: 2017-05-30
+Authors@R: person(given = "Pericles", email = "peconeto@gmail.com", role = c("aut", "cre"))
+Description: Common functions, datasets, and other tools used by aviation safety data teams
+License: GPL-3
+LazyData: TRUE
+Imports: tidyverse, qcc, lubridate
