@@ -156,14 +156,16 @@ spcChart <- function(filename = NA,
     labs(title = title, x = "Dates", y = "Count") +
     theme(axis.text = element_text(size = 8),
           axis.title = element_text(size = 14),
-          title = element_text(size = 18)) +
+          title = element_text(size = 18),
+          legend.text = element_text(size = 12),
+          legend.position = "bottom") +
     geom_step(aes(x = labels, y = LCL, color = "Control Limits Adjusted for Flights"), linetype = 2, group = 1) +
     geom_step(aes(x = labels, y = UCL, color = "Control Limits Adjusted for Flights"), linetype = 2, group = 1) +
     geom_step(aes(x = labels, y = center, color = "Average Events Adjusted for Flights"), linetype = 2, group = 1) +
-    geom_line(aes(x = labels, y = values, color = "Events"), group = 1) +
+    geom_line(aes(x = labels, y = values, color = "Count of Events"), group = 1) +
     geom_point(aes(x = labels, y = values, fill = factor(beyond_limits)), shape = 21 , color = "transparent" , size = 4) +
     scale_fill_manual(values = c("0" = "black", "1" = "red", "2" = "yellow"), guide = FALSE) + 
-    scale_color_manual(name = "", values = c("Control Limits Adjusted for Flights" = "red", "Average Events Adjusted for Flights" = "blue", "Events" = "black"))
+    scale_color_manual(name = "", values = c("Control Limits Adjusted for Flights" = "red", "Average Events Adjusted for Flights" = "blue", "Count of Events" = "black"))
 
   # Plot
   return(plot)
