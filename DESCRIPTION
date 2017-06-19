@@ -8,3 +8,4 @@ Description: Common functions, datasets, and other tools used by aviation safety
 License: GPL-3
 LazyData: TRUE
 Imports: tidyverse, qcc, lubridate
+RoxygenNote: 6.0.1

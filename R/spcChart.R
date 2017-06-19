@@ -1,14 +1,24 @@
-# Function accepts a data file, start and end dates, and grouping
-# Returns SPC chart
-# Function expects certain standards on data file:
-## First column contains dates in the format "Mmm, YYYY"
-## Second column contains a count of events/issues/deficiencies
-## Third column contains the number of relevant operations
-## There should be no skipped months within dataset
-## Oldest date first (top), newest date last (bottom)
-# Data is collected at month end; mid-month date ranges will exclude the last month
-
-spcChart <- function(filename = NA,
+#' @title
+#' Statistical Process Control np-Chart Using ggplot2
+#' @description
+#' Function to create statistical process control (SPC) np-chart from aviation safety datasets.
+#' Uses qcc:qcc() to generate np-chart values and ggplot2 to generate the plot.
+#' @param filename Name of CSV file on working directory to be consumed; expects specific formatting:
+#' First column contains dates in the format "Mmm, YYYY"
+#' Second column contains a count of events/issues/deficiencies
+#' Third column contains the number of relevant operations (i.e. flights)
+#' There should be no skipped months within dataset
+#' Ordered from oldest date first (top) to newest date last (bottom)
+#' @param title Optional plot title
+#' @param group Date grouping for data to be plotted; accepts monthly or quarterly, default monthly
+#' @param enddate Ending date ; accepts lubridate functions, default last day of previous month from current date
+#' @param startdate Starting date for data to be plotted; accepts lubridate functions, default first day 24 months before current date
+#' @return
+#' SPC np-chart
+#' @examples
+#' spcChart("data.csv")
+#' ggplot2::ggsave(filename = "np-Chart.png", plot = spcChart(filename = "file.csv"), device = "png", path = getwd(), height = 7, width = 14, units = "in")
+spcChart <- function(filename,
                      title = NA,
                      group = c("monthly", "quarterly"),
                      enddate = floor_date(today(), "month") - 1, # Last day of previous month
