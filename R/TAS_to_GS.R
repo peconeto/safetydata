@@ -15,6 +15,7 @@
 #' TAS_to_GS(TAS_kts = 100) # TAS == GS when direct wind is 0kts
 #' TAS_to_GS(TAS_kts = 100, 10) # Headwind reduces GS
 #' TAS_to_GS(TAS_kts = 100, -10) # Tailwind increases GS
+#' @export
 TAS_to_GS <- function(TAS_kts, Direct_Wind_Component_kts = 0) {
   GS <- TAS_kts - Direct_Wind_Component_kts
   return(GS)

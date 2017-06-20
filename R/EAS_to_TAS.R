@@ -23,6 +23,7 @@
 #' @examples
 #' EAS_to_TAS(EAS_kts = 100, Altimeter_inHg = 29.80, Temp_C = 35)
 #' EAS_to_TAS(EAS_kts = 100) # At standard temperature and pressure, EAS is almost exactly the same as TAS
+#' @export
 EAS_to_TAS <- function(EAS_kts, Altimeter_inHg = 29.92, Temp_C = 15) {
   # Constants
   p <- Altimeter_inHg * 33.8639 # Pressure converstion from altimeter (inHg) to hPa / millibars

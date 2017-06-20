@@ -16,6 +16,7 @@
 #' An integer corresponding to a slope
 #' @examples
 #' qq_abline_slope(1:10)
+#' @export
 qq_abline_slope <- function(x) {
   x <- x[!is.na(x)]
   slope <- diff(quantile(x, c(0.25, 0.75))) / diff(qnorm(c(0.25, 0.75)))

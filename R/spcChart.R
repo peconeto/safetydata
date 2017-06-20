@@ -18,6 +18,7 @@
 #' @examples
 #' spcChart("data.csv")
 #' ggplot2::ggsave(filename = "np-Chart.png", plot = spcChart(filename = "file.csv"), device = "png", path = getwd(), height = 7, width = 14, units = "in")
+#' @export
 spcChart <- function(filename,
                      title = NA,
                      group = c("monthly", "quarterly"),
@@ -174,7 +175,7 @@ spcChart <- function(filename,
     geom_step(aes(x = labels, y = center, color = "Average Events Adjusted for Flights"), linetype = 2, group = 1) +
     geom_line(aes(x = labels, y = values, color = "Count of Events"), group = 1) +
     geom_point(aes(x = labels, y = values, fill = factor(beyond_limits)), shape = 21 , color = "transparent" , size = 4) +
-    scale_fill_manual(values = c("0" = "black", "1" = "red", "2" = "yellow"), guide = FALSE) + 
+    scale_fill_manual(values = c("0" = "black", "1" = "red", "2" = "yellow"), guide = FALSE) +
     scale_color_manual(name = "", values = c("Control Limits Adjusted for Flights" = "red", "Average Events Adjusted for Flights" = "blue", "Count of Events" = "black"))
 
   # Plot

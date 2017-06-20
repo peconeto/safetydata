@@ -9,6 +9,7 @@
 #' \url{https://app.ntsb.gov/aviationquery/}
 #' @examples
 #' df <- downloadNTSBdf() # Downloads and stores as .GlobalEnv object
+#' @export
 downloadNTSBdf <- function() {
   # Import and read latest NTSB database
   df <- read.csv("http://app.ntsb.gov/aviationquery/Download.ashx?type=csv",

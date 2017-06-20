@@ -14,6 +14,7 @@
 #' windVectors_crosswind(0, 90, 10) # Crosswind coming from the right has a positive value
 #' windVectors_crosswind(0, 350, 10) # Crosswind coming from the left has a negative value
 #' windVectors_crosswind(0, 630, 10) # Degree values >=360 can be used (360 == 0)
+#' @export
 windVectors_crosswind <- function(True_Heading_deg, True_Wind_Direction_From_deg, Wind_Speed_kts) {
   # Calculate alpha (angle between aircraft and wind)
   alpha <- True_Wind_Direction_From_deg - True_Heading_deg

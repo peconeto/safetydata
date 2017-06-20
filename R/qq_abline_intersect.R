@@ -18,6 +18,7 @@
 #' An integer corresponding to a y-intercept
 #' @examples
 #' qq_abline_intersect(1:10)
+#' @export
 qq_abline_intersect <- function(x, slope = NULL) {
   # If slope is not provided, use qq_abline_slope() to calculate it
   if (is.null(slope)) {

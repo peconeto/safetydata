@@ -14,6 +14,7 @@
 #' windVectors_headwind(0, 0, 10) # Headwind has a positive value
 #' windVectors_headwind(0, 150, 10) # Tailwind has a negative value
 #' windVectors_headwind(0, 540, 10) # Degree values >=360 can be used (360 == 0)
+#' @export
 windVectors_headwind <- function(True_Heading_deg, True_Wind_Direction_From_deg, Wind_Speed_kts) {
   # Calculate alpha (angle between aircraft and wind)
   alpha <- True_Wind_Direction_From_deg - True_Heading_deg
