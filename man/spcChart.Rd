@@ -2,11 +2,11 @@
 % Please edit documentation in R/spcChart.R
 \name{spcChart}
 \alias{spcChart}
-\title{Statistical Process Control np-Chart Using ggplot2}
+\title{Statistical Process Control np- or p-Chart Using ggplot2}
 \usage{
-spcChart(filename, title = NA, group = c("monthly", "quarterly"),
-  enddate = floor_date(today(), "month") - 1, startdate = enddate -
-  months(24) + 1)
+spcChart(filename, title = NA, type = c("np", "p"), group = c("monthly",
+  "quarterly"), enddate = floor_date(today(), "month") - 1,
+  startdate = enddate - months(24) + 1)
 }
 \arguments{
 \item{filename}{Name of CSV file on working directory to be consumed; expects specific formatting:
@@ -18,6 +18,8 @@ Ordered from oldest date first (top) to newest date last (bottom)}
 
 \item{title}{Optional plot title}
 
+\item{type}{Chart type; accepts np or p, default np}
+
 \item{group}{Date grouping for data to be plotted; accepts monthly or quarterly, default monthly}
 
 \item{enddate}{Ending date ; accepts lubridate functions, default last day of previous month from current date}
@@ -28,8 +30,8 @@ Ordered from oldest date first (top) to newest date last (bottom)}
 SPC np-chart
 }
 \description{
-Function to create statistical process control (SPC) np-chart from aviation safety datasets.
-Uses qcc:qcc() to generate np-chart values and ggplot2 to generate the plot.
+Function to create statistical process control (SPC) np-chart or p-chart from aviation safety datasets.
+Uses qcc:qcc() to generate SPC chart values and ggplot2 to generate the plot.
 }
 \examples{
 spcChart("data.csv")
