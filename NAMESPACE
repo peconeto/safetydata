@@ -2,6 +2,7 @@
 
 export(EAS_to_TAS)
 export(TAS_to_GS)
+export(densityAltitude)
 export(downloadNTSBdf)
 export(qq_abline_intersect)
 export(qq_abline_slope)
