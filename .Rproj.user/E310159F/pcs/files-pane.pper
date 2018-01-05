@@ -1,0 +1,9 @@
+{
+    "path" : "~/GitHub/safetydata",
+    "sortOrder" : [
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        }
+    ]
+}

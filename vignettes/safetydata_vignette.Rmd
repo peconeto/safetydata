@@ -53,6 +53,10 @@ the [ggplot2](http://ggplot2.tidyverse.org/) library.
 - **windVectors_crosswind** and **windVectors_headwind** are functions used to extract the longitudinal and transverse vectors
 of wind relative to an aircraft.
 
+- **rare_events** is a function used to determine rare events that require validation in EMS
+
+- **rare_events_metadata** is a function used to create a db file referenced in rare_events function
+
 ## Examples
 
 Combine several functions to determine ground speed from raw aircraft data.
