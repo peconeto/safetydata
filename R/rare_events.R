@@ -1,0 +1,508 @@
+#' @title
+#' Rare Events Search
+#' @description
+#' Function to create data frame of rare events that need to be validated in EMS
+#' @param x eFOQA username in single quotes
+#' @param y eFOQA password in single quotes
+#' @return
+#' Data frame consisting of flight record, flight date, tail number, fleet, takeoff airport code, landing airport code, and event type
+#' @export
+rare_events <- function(x, y) {
+
+tryCatch({
+
+## Load relevant packages
+library(Rems)
+library(magrittr)
+library(lubridate)
+library(plyr)
+
+## Connect to EFOQA and assign file name to metadata
+conn <- connect(x, y)
+metadata <- 'rare_events2.db'
+#if using metadata file within package itself
+#metadata <- system.file("metadata", "rare_events2.db", package="safetydata")
+
+#Create flight query object using the existing metadata file
+fq <- flt_query(conn, "ems4-app", metadata)
+
+##Create object with first day of month X number of months prior
+mo6 <<- as.Date(paste(c(year(Sys.Date()), month(Sys.Date()), 01), collapse="-")) %m-% months(6)
+previous7 <<- as.Date(Sys.Date() - days(7))
+
+
+##GPWS
+fq <- set_database(fq, 'p0: library flight safety events - all events')
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p0: event type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"landing airport code" != "UNKNOWN"') %>%
+  filter("'P0: Event Type' in c('GPWS: Terrain', 'GPWS: Pull Up', 'GPWS: Terrain Pull Up')") %>%
+  filter('"p0: Status" != "FOQA: Complete"') %>%
+  filter('"p0: false positive" == "Not a False Positive"') %>%
+  filter("'P0: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6')
+
+gpws <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(gpws) != 0) {
+  gpws <- rename(gpws,c('P0: Event Type'='Event_Type'))
+  gpws <- gpws %>%
+    mutate(`Event_Type` = paste('P0', `Event_Type`, sep=": "))
+}
+
+
+##Stall Warning
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p0: event type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"landing airport code" != "UNKNOWN"') %>%
+  filter('"P0: Event Type" == "Stall Warning"') %>%
+  filter('"p0: Status" != "FOQA: Complete"') %>%
+  filter('"p0: false positive" == "Not a False Positive"') %>%
+  filter("'P0: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6')
+
+stall <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(stall) != 0) {
+  stall <- rename(stall,c('P0: Event_Type'='Event_Type'))
+  stall <- stall %>%
+    mutate(`Event_Type` = paste('P0', `Event_Type`, sep=": "))
+}
+
+
+##E190 Not in Takeoff Config
+##landing airport code filter needs to be excluded
+eventtypetoconfig190 <<- c('E190 Not in T/O Config excluding autobrakes')
+
+fq <- set_database(fq, 'p172: not in t/o config events - all events')
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p172: Event Type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"p172: Event Type" == eventtypetoconfig190') %>%
+  filter('"p172: Status" != "FOQA: Complete"') %>%
+  filter('"p172: false positive" == "Not a False Positive"') %>%
+  filter("'P172: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6') %>%
+  filter('"Fleet Group" == "E190"')
+
+toconfig190 <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(toconfig190) != 0) {
+  toconfig190 <- rename(toconfig190,c('P172: Event Type'='Event_Type'))
+  toconfig190 <- toconfig190 %>%
+    mutate(`Event_Type` = paste('P172', `Event_Type`, sep=": "))
+}
+
+
+##Airbus Not in Takeoff Config
+eventtypetoconfigbus <<- c('Airbus Not in T/O Config excluding autobrakes')
+
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p172: Event Type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"p172: Event Type" == eventtypetoconfigbus') %>%
+  filter('"p172: Status" != "FOQA: Complete"') %>%
+  filter('"p172: false positive" == "Not a False Positive"') %>%
+  filter("'P172: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6') %>%
+  filter("'Fleet Group' in c('A320', 'A321')") %>%
+  filter('"P172: Max Brake Temp at Begin Takeoff POF (deg C)" < 300')
+
+toconfigbus <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(toconfigbus) != 0) {
+  toconfigbus <- rename(toconfigbus,c('P172: Event Type'='Event_Type'))
+  toconfigbus <- toconfigbus %>%
+    mutate(`Event_Type` = paste('P172', `Event_Type`, sep=": "))
+}
+
+
+##High Bank Angle
+fq <- set_database(fq, 'p186: high bank angle profile events - all events')
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p186: Event Type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"landing airport code" != "UNKNOWN"') %>%
+  filter('"p186: Event Type" == "High Bank Angle for this Height"') %>%
+  filter('"p186: Status" != "FOQA: Complete"') %>%
+  filter('"p186: false positive" == "Not a False Positive"') %>%
+  filter("'P186: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6') %>%
+  filter('"P186: Maximum Bank Angle While Airborne (Absolute Value)" >= 50')
+
+bankangle <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(bankangle) != 0) {
+  bankangle <- rename(bankangle,c('P186: Event Type'='Event_Type'))
+  bankangle <- bankangle %>%
+    mutate(`Event_Type` = paste('P186', `Event_Type`, sep=": "))
+}
+
+
+##Operating Altitude Exceedance E190
+fq <- set_database(fq, 'p174: maximum operating altitude events - all events')
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p174: Event Type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"landing airport code" != "UNKNOWN"') %>%
+  filter('"p174: Event Type" == "190 Altitude Exceedance"') %>%
+  filter('"p174: Status" != "FOQA: Complete"') %>%
+  filter('"p174: false positive" == "Not a False Positive"') %>%
+  filter("'P174: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6') %>%
+  filter('"fleet group" == "E190"')
+
+opaltitude190 <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(opaltitude190) != 0) {
+  opaltitude190 <- rename(opaltitude190,c('P174: Event Type'='Event_Type'))
+  opaltitude190 <- opaltitude190 %>%
+    mutate(`Event_Type` = paste('P174', `Event_Type`, sep=": "))
+}
+
+
+##Operating Altitude Exceedance Airbus
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p174: Event Type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"landing airport code" != "UNKNOWN"') %>%
+  filter('"p174: Event Type" == "320/321 Exceedance"') %>%
+  filter('"p174: Status" != "FOQA: Complete"') %>%
+  filter('"p174: false positive" == "Not a False Positive"') %>%
+  filter("'P174: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6') %>%
+  filter("'Fleet Group' in c('A320', 'A321')")
+
+opaltitudebus <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(opaltitude190) != 0) {
+  opaltitudebus <- rename(opaltitudebus,c('P174: Event Type'='Event_Type'))
+  opaltitudebus <- opaltitudebus %>%
+    mutate(`Event_Type` = paste('P174', `Event_Type`, sep=": "))
+}
+
+
+##HSRTO
+fq <- set_database(fq, 'p196: HSRTO Events - all events')
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p196: Event Type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"p196: Event Type" == "HSRTO"') %>%
+  filter('"p196: Status" != "FOQA: Complete"') %>%
+  filter('"p196: false positive" == "Not a False Positive"') %>%
+  filter("'P196: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6')
+
+hsrto <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(hsrto) != 0) {
+  hsrto <- rename(hsrto,c('P196: Event Type'='Event_Type'))
+  hsrto <- hsrto %>%
+    mutate(`Event_Type` = paste('P196', `Event_Type`, sep=": "))
+}
+
+
+##Inadvertent Spoiler Deployment
+fq <- set_database(fq, 'p176: Inadvertant Spoiler Deployment Events - all events')
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p176: Event Type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"landing airport code" != "UNKNOWN"') %>%
+  filter('"p176: Status" != "FOQA: Complete"') %>%
+  filter('"p176: false positive" == "Not a False Positive"') %>%
+  filter("'P176: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6') %>%
+  filter('"P176: Inadvertant Spoiler Deployment V2" == 1') %>%
+  filter('"p176: Spoiler Position Max (Left) V2 (deg)" >= 40') %>%
+  filter('"p176: Spoiler Position Max (Right) V2 (deg)" >= 40')
+
+spoiler <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(spoiler) != 0) {
+  spoiler <- rename(spoiler,c('P176: Event Type'='Event_Type'))
+  spoiler <- spoiler %>%
+    mutate(`Event_Type` = paste('P176', `Event_Type`, sep=": "))
+}
+
+
+##Parking Brake in Flight E190
+eventtypeparkingbrake190 <<- c('Parking Brake in Flight E190')
+phaseofflight <<- c('A) Start & Push',
+                    'B) Taxi Out',
+                    'C) Takeoff',
+                    'D) Rejected Takeoff',
+                    'K) Roll Out',
+                    'M) Taxi In',
+                    'N) Parking',
+                    'unknown state')
+
+fq <- set_database(fq, 'p136: parking brake in flight events - all events')
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p136: Event Type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"landing airport code" != "UNKNOWN"') %>%
+  filter('"p136: Event Type" == eventtypeparkingbrake190') %>%
+  filter('"p136: Status" != "FOQA: Complete"') %>%
+  filter('"p136: false positive" == "Not a False Positive"') %>%
+  filter("'P136: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6') %>%
+  filter('"Fleet Group" == "E190"') %>%
+  filter("'P136: Phase of Flight' not in c(phaseofflight)")
+
+parkingbrake190 <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(parkingbrake190) != 0) {
+  parkingbrake190 <- rename(parkingbrake190,c('P136: Event Type'='Event_Type'))
+  parkingbrake190 <- parkingbrake190 %>%
+    mutate(`Event_Type` = paste('P136', `Event_Type`, sep=": "))
+}
+
+
+##Parking Brake in Flight Airbus
+eventtypeparkingbrakebus <<- c('Parking Brake in Flight Airbus')
+
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p136: Event Type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"landing airport code" != "UNKNOWN"') %>%
+  filter('"p136: Event Type" == eventtypeparkingbrakebus') %>%
+  filter('"p136: Status" != "FOQA: Complete"') %>%
+  filter('"p136: false positive" == "Not a False Positive"') %>%
+  filter("'P136: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6') %>%
+  filter("'Fleet Group' in c('A320', 'A321')") %>%
+  filter("'P136: Phase of Flight' not in c(phaseofflight)")
+
+parkingbrakebus <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(parkingbrakebus) != 0) {
+  parkingbrakebus <- rename(parkingbrakebus,c('P136: Event Type'='Event_Type'))
+  parkingbrakebus <- parkingbrakebus %>%
+    mutate(`Event_Type` = paste('P136', `Event_Type`, sep=": "))
+}
+
+
+##Egregious Unstable Approach
+eventtype <<- c('<-1700 below 500ft. HAT', 'Gear Down and Locked below 500ft. HAT',
+                'Late Final Flap Extension and Handle Movement Below 500ft. HAT',
+                'Speed <-15 Kts below 500ft. HAT vapp',
+                'Speed >40 Kts below 500ft. HAT vapp')
+
+fq <- set_database(fq, 'p198: unstable approach events - all events')
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p198: Event Type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"landing airport code" != "UNKNOWN"') %>%
+  filter("'P198: Event Type' in c(eventtype)") %>%
+  filter('"p198: Status" != "FOQA: Complete"') %>%
+  filter('"p198: false positive" == "Not a False Positive"') %>%
+  filter("'P198: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6') %>%
+  filter('"P198: Mean Vertical Speed during Roll Out (excluding contact before sustained WOW) (ft/min)"
+         >= "-20"') %>%
+  filter('"P198: Mean Vertical Speed during Roll Out (excluding contact before sustained WOW) (ft/min)"
+         < "21"')
+
+unstableapp <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(unstableapp) != 0) {
+  unstableapp <- rename(unstableapp,c('P198: Event Type'='Event_Type'))
+  unstableapp <- unstableapp %>%
+    mutate(`Event_Type` = paste('P198', `Event_Type`, sep=": "))
+}
+
+
+##Low Level Windshear
+##excludes fleet filter
+fq <- set_database(fq, 'p188: low level windshear events - all events')
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p188: Event Type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"landing airport code" != "UNKNOWN"') %>%
+  filter("'p188: Event Type' in c('Low-Level Windshear Airbus Recovery',
+         'Low-Level Windshear E190 Recovery')") %>%
+  filter('"p188: Status" != "FOQA: Complete"') %>%
+  filter('"p188: false positive" == "Not a False Positive"') %>%
+  filter("'P188: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6')
+
+
+windshear <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(windshear) != 0) {
+  windshear <- rename(windshear,c('P188: Event Type'='Event_Type'))
+  windshear <- windshear %>%
+    mutate(`Event_Type` = paste('P188', `Event_Type`, sep=": "))
+}
+
+
+##Low Fuel Landings
+fq <- set_database(fq, 'p197: low fuel landings events - all events')
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p197: Event Type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"landing airport code" != "UNKNOWN"') %>%
+  filter("'p197: Event Type' in c('A320 Low Fuel Landing',
+         'A321 Low Fuel Landing',
+         'E190 Low Fuel Landing')") %>%
+  filter('"p197: Status" != "FOQA: Complete"') %>%
+  filter('"p197: false positive" == "Not a False Positive"') %>%
+  filter("'P197: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6')
+
+
+lowfuel <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(lowfuel) != 0) {
+  lowfuel <- rename(lowfuel,c('P197: Event Type'='Event_Type'))
+  lowfuel <- lowfuel %>%
+    mutate(`Event_Type` = paste('P197', `Event_Type`, sep=": "))
+}
+
+
+##Autopilot Disengaged in RVSM
+fq <- set_database(fq, 'p216: autopilot disengage above rvsm events - all events')
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p216: Event Type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"landing airport code" != "UNKNOWN"') %>%
+  filter('"p216: Event Type" != "Autopilot Disengaged (RVSM)"') %>%
+  filter('"p216: Status" == "FOQA: Complete"') %>%
+  filter('"p216: false positive" == "Not a False Positive"') %>%
+  filter("'P216: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6')
+
+
+rvsm <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(rvsm) != 0) {
+  rvsm <- rename(rvsm,c('P216: Event Type'='Event_Type'))
+  rvsm <- rvsm %>%
+    mutate(`Event_Type` = paste('P216', `Event_Type`, sep=": "))
+}
+
+
+##Ground Spoilers
+fq <- set_database(fq, 'p205: ground spoilers not deployed events - all events')
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p205: Event Type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"landing airport code" != "UNKNOWN"') %>%
+  filter("'p205: Event Type' in c('Ground Spoilers Not Deployed Airbus',
+         'Ground Spoilers Not Deployed Embraer')") %>%
+  filter('"p205: Status" != "FOQA: Complete"') %>%
+  filter('"p205: false positive" == "Not a False Positive"') %>%
+  filter("'P205: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6')
+
+
+groundspoilers <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(groundspoilers) != 0) {
+  groundspoilers <- rename(groundspoilers,c('P205: Event Type'='Event_Type'))
+  groundspoilers <- groundspoilers %>%
+    mutate(`Event_Type` = paste('P205', `Event_Type`, sep=": "))
+}
+
+
+##Flap Handle Movement during Takeoff
+fq <- set_database(fq, 'p203: flap movement on takeoff events - all events')
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p203: Event Type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"landing airport code" != "UNKNOWN"') %>%
+  filter('"p203: Event Type" == "Flap Handle Movement on Takeoff"') %>%
+  filter('"p203: Status" != "FOQA: Complete"') %>%
+  filter('"p203: false positive" == "Not a False Positive"') %>%
+  filter("'P203: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6')
+
+flaphandle <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(flaphandle) != 0) {
+  flaphandle <- rename(flaphandle,c('P203: Event Type'='Event_Type'))
+  flaphandle <- flaphandle %>%
+    mutate(`Event_Type` = paste('P203', `Event_Type`, sep=": "))
+}
+
+
+##Low Energy (Airbus)
+##need to change download date to flight date
+fq <- set_database(fq, 'p211: risk of stall (low energy) events - all events')
+fq <- reset(fq) %>%
+  select('flight record', 'flight date', 'tail number', 'fleet', 'takeoff airport code', 'landing airport code', 'p211: Event Type') %>%
+  filter('"Data Quality (master)" == "Acceptable"') %>%
+  filter('"takeoff airport code" != "UNKNOWN"') %>%
+  filter('"landing airport code" != "UNKNOWN"') %>%
+  filter('"p211: Event Type" == "Low Energy (Airbus)"') %>%
+  filter('"p211: Status" != "FOQA: Complete"') %>%
+  filter('"p211: false positive" == "Not a False Positive"') %>%
+  filter("'P211: Processing State' in c('Succeeded', 'Reprocessing', 'Need to Reprocess')") %>%
+  filter('"flight date" >= mo6')
+
+lowenergy <- run(fq)
+
+# If there are any records, then do the below - otherwise skip
+if(nrow(lowenergy) != 0) {
+  lowenergy <- rename(lowenergy, c('P211: Event Type'='Event_Type'))
+  lowenergy <- lowenergy %>%
+    mutate(`Event_Type` = paste('P211', `Event_Type`, sep=": "))
+}
+
+#row bind all queries into 1 table
+rareevents <<- rbind(bankangle, gpws, hsrto, opaltitude190, opaltitudebus, parkingbrake190, parkingbrakebus,
+                     spoiler, toconfig190, toconfigbus, windshear, stall, lowfuel, rvsm, unstableapp,
+                     groundspoilers, flaphandle, lowenergy)
+return(rareevents)
+
+}, error=function(a,b) {rare_events_metadata(x, y)
+  rare_events(x, y)})
+
+}
+
+
+
+
+
+
+
+
+
+
+
