@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1525201299409.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3797134223",
+    "id" : "93EA0267",
+    "lastKnownWriteTime" : 1514918427,
+    "last_content_update" : 1514918427,
+    "path" : "~/GitHub/safetydata/R/TAS_to_GS.R",
+    "project_path" : "R/TAS_to_GS.R",
+    "properties" : {
+        "cursorPosition" : "0,0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
