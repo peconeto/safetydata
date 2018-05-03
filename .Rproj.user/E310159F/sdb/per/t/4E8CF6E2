@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "#' @title\n#' Convert Equivalent Airspeed to True Airspeed\n#' @description\n#' Function to convert aircraft's equivalent airspeed (EAS) to true airspeed (TAS).\n#' TAS is equal to EAS adjusted for non-standard atmospheric pressure and temperature.\n#' For modern commercial aircraft that opearte below the speed of sound, indicated airspeed (IAS) and EAS are practically equal to each other.\n#' They may be used interchangeably in the context of measuring aircraft speeds within these assuptions.\n#' @seealso\n#' \\code{\\link{TAS_to_GS}}\n#' @param EAS_kts Equivalent airspeed in knots\n#' @param Altimeter_inHg Local altimeter setting measured as inches of mercury, defaults to 29.92 (ICAO standard atmosphere)\n#' @param Temp_C Local outside air temperature in degrees Celcius, defaults to 15 (ICAO standard temperature)\n#' @return\n#' True airspeed in knots\n#' @source\n#' US Navy, FAA (1965-01-02)\n#' Aerodynamics for Naval Aviators (NAVAIR/NAVWEPS 00-80T-80)\n#' \\url{https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/}\n#' @source\n#' NACA, ICAO, NASA (Published 1954-05-01, Acquired 1996-09-01)\n#' Manual of the ICAO standard atmosphere calculations by the NACA (NASA Technical Reports Server Document ID 19930083952)\n#' \\url{https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19930083952.pdf}\n#' @examples\n#' EAS_to_TAS(EAS_kts = 100, Altimeter_inHg = 29.80, Temp_C = 35)\n#' EAS_to_TAS(EAS_kts = 100) # At standard temperature and pressure, EAS is almost exactly the same as TAS\n#' @export\nEAS_to_TAS <- function(EAS_kts, Altimeter_inHg = 29.92, Temp_C = 15) {\n  # Constants\n  p <- Altimeter_inHg * 33.8639 # Pressure converstion from altimeter (inHg) to hPa / millibars\n  Temp <- Temp_C + 273.15 # Temperature conversion from C to K\n  p0 <- 1013.2 # Standard sea level pressure in hPa / millibars\n  T0 <- 288.15 # Standard sea level temperature in K\n  d0 <- 1.225 # Standard sea level density in kg/m^3\n  # Calculate local air density\n  d <- d0 * ((p * T0) / (p0 * Temp))\n  # Perform EAS->TAS calculation\n  TAS <- EAS_kts * sqrt(d0 / d)\n  return(TAS)\n}\n",
+    "created" : 1516300289574.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2756590860",
+    "id" : "4E8CF6E2",
+    "lastKnownWriteTime" : 1514918427,
+    "last_content_update" : 1514918427,
+    "path" : "~/GitHub/safetydata/R/EAS_to_TAS.R",
+    "project_path" : "R/EAS_to_TAS.R",
+    "properties" : {
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
