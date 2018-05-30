@@ -4,7 +4,8 @@
 \alias{rare_events}
 \title{Rare Event Search}
 \usage{
-rare_events(username, password, metadata.db = 'event_validation.db', metadata.exists = FALSE, metadata.keep = FALSE,  path = getwd())
+rare_events(username, password, metadata.db = "event_validation.db",
+  metadata.exists = FALSE, metadata.keep = FALSE, path = getwd())
 }
 \arguments{
 \item{username}{eFOQA username}
@@ -26,5 +27,8 @@ events that require validation in EMS that can be saved as a data frame
 A function used to determine rare events that require validation in EMS
 }
 \examples{
-rare_events('username', 'password')
+rare_events('username', 'password', \\cr
+metadata.db = 'event_validation.db', \\cr
+metadata.exists = FALSE, metadata.keep = FALSE, \\cr
+path = getwd()))
 }

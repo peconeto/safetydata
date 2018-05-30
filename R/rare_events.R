@@ -2,8 +2,6 @@
 #' Rare Event Search
 #' @description
 #' A function used to determine rare events that require validation in EMS
-#' @usage
-#' rare_events(username, password, metadata.db = 'event_validation.db', metadata.exists = FALSE, metadata.keep = FALSE,  path = getwd())
 #' @param username eFOQA username
 #' @param password eFOQA password
 #' @param metadata.db file name of metadata
@@ -13,7 +11,10 @@
 #' @return
 #' events that require validation in EMS that can be saved as a data frame
 #' @examples
-#' rare_events('username', 'password')
+#' rare_events('username', 'password', \cr
+#' metadata.db = 'event_validation.db', \cr
+#' metadata.exists = FALSE, metadata.keep = FALSE, \cr
+#' path = getwd()))
 #' @export
 rare_events <- function(username, password, metadata.db = 'event_validation.db', metadata.exists = FALSE, metadata.keep = FALSE,  path = getwd()) {
 
