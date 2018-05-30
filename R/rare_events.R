@@ -25,8 +25,9 @@ rare_events <- function(username, password, metadata.db = 'event_validation.db',
 
   ems_name <- 'ems4-app'
 
-  if(file.exists(metadata.db) & metadata.exists == FALSE) {invisible(readline(prompt="A metadata file already exists in your working directory. Press [enter] to overwrite the existing metadata file."))}
-  if(exists("df1", envir = .GlobalEnv)) {invisible(readline(prompt="df1 already exists in your Global Environment. Press [enter] to overwrite the object."))}
+  if(file.exists(metadata.db) & metadata.exists == FALSE) {invisible(readline(prompt="A metadata file already exists in your working directory. Press [enter] to overwrite the existing metadata file or [esc] to exit function."))}
+  if(exists("fq", envir = .GlobalEnv)) {invisible(readline(prompt="fq already exists in your Global Environment. Press [enter] to overwrite the object or [esc] to exit function."))}
+  if(exists("df1", envir = .GlobalEnv)) {invisible(readline(prompt="df1 already exists in your Global Environment. Press [enter] to overwrite the object or [esc] to exit function."))}
   if(exists("eventdfs", envir = .GlobalEnv)) {invisible(readline(prompt="eventdfs already exists in your Global Environment. Press [enter] to overwrite the object or [esc] to exit function."))}
   if(exists("eventtypeeua", envir = .GlobalEnv)) {invisible(readline(prompt="eventtypeeua already exists in your Global Environment. Press [enter] to overwrite the object or [esc] to exit function."))}
   if(exists("eventtypetoconfig", envir = .GlobalEnv)) {invisible(readline(prompt="eventtypetoconfig already exists in your Global Environment. Press [enter] to overwrite the object or [esc] to exit function."))}
@@ -289,7 +290,7 @@ rare_events <- function(username, password, metadata.db = 'event_validation.db',
   if(metadata.keep == FALSE) {file.remove(metadata.db)}
 
   # Clean Global environment
-  rm(df1, eventdfs, eventtypeeua, eventtypetoconfig, envir=.GlobalEnv)
+  rm(fq, df1, eventdfs, eventtypeeua, eventtypetoconfig, envir=.GlobalEnv)
   rm(list=ls(pattern="^dfrareevents", envir=.GlobalEnv), envir=.GlobalEnv)
 
   return(rareevents)
