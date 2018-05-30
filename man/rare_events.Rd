@@ -4,15 +4,23 @@
 \alias{rare_events}
 \title{Rare Event Search}
 \usage{
-rare_events(x, y, env = .GlobalEnv)
+rare_events(username, password, metadata.db = 'event_validation.db', metadata.exists = FALSE, metadata.keep = FALSE,  path = getwd())
 }
 \arguments{
-\item{x}{eFOQA username}
+\item{username}{eFOQA username}
 
-\item{y}{eFOQA password}
+\item{password}{eFOQA password}
+
+\item{metadata.db}{file name of metadata}
+
+\item{metadata.exists}{logical. Does the metadata file exist in the working directory?}
+
+\item{metadata.keep}{logical. Should the metadata file be kept after running the function? Note: Due to permissioning, the metadata file may be kept even if metadata.keep = FALSE}
+
+\item{path}{specify metadata file location for saving and retrieval}
 }
 \value{
-rareevents data frame with events that require validation in EMS
+events that require validation in EMS that can be saved as a data frame
 }
 \description{
 A function used to determine rare events that require validation in EMS
