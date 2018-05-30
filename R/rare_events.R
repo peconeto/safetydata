@@ -2,11 +2,6 @@
 #' Rare Event Search
 #' @description
 #' A function used to determine rare events that require validation in EMS
-#' @usage
-#' rare_events(username, password, \cr
-#' metadata.db = 'event_validation.db', \cr
-#' metadata.exists = FALSE, metadata.keep = FALSE, \cr
-#' path = getwd())
 #' @param username eFOQA username
 #' @param password eFOQA password
 #' @param metadata.db file name of metadata
