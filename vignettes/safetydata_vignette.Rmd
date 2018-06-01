@@ -24,13 +24,7 @@ practices are still a work in progress. The 'safetydata' library is a R package 
 
 The following datasets are currently available:
 
-- **AirportCodes_20170404** contains ICAO and IATA codes for various airports
-
-- **AirportTimezones_20170404** contains timezones for various airports
-
 - **NTSBData_20170328** is a copy of the NTSB accidents and incidents database created with the **downloadNTSBdf** function
-
-- **USA_DaylightSavings_20170404** is a dataframe with USA daylight savings adjustments for the decade starting 2010
 
 ## Functions
 
